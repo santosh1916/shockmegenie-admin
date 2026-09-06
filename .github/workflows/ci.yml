@@ -1,0 +1,68 @@
+name: CI
+
+# The gate. Runs on every pull request, so lint, typecheck, test, and build cannot be
+# quietly skipped. Scripts that nothing enforces stop being run within a month.
+on:
+  pull_request:
+  push:
+    branches: [dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      # The API lives in a separate repository, so its committed OpenAPI specification has
+      # to be fetched to verify this repo's generated client is current. Requires a
+      # CONTRACTS_TOKEN secret with read access to shockmegenie-api. If the secret is
+      # absent the job says so loudly rather than passing quietly.
+      - name: Check out the API specification
+        id: spec
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/shockmegenie-api
+          ref: ${{ github.base_ref || github.ref_name }}
+          token: ${{ secrets.CONTRACTS_TOKEN }}
+          path: .api-spec
+          sparse-checkout: openapi
+        continue-on-error: true
+
+      - name: Generated API client is up to date
+        run: |
+          if [ ! -f .api-spec/openapi/openapi.json ]; then
+            echo "::error::Could not fetch the API OpenAPI specification. Set a CONTRACTS_TOKEN secret with read access to shockmegenie-api. Without it, contract drift between repositories is NOT being checked."
+            exit 1
+          fi
+          OPENAPI_SPEC=.api-spec/openapi/openapi.json pnpm sync:contracts
+          git diff --exit-code src/lib/api/schema.d.ts \
+            || { echo "::error::src/lib/api/schema.d.ts is stale. Run pnpm sync:contracts against the API and commit the result."; exit 1; }

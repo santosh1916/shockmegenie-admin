@@ -1,0 +1,11 @@
+# Default owners for everything in this repository.
+# Replace with real GitHub usernames or teams once the organisation exists.
+
+# *                        @shockmegenie/engineering
+
+# Areas where a mistake has consequences beyond a bug. Consider requiring a second
+# reviewer on these paths once the team is set up.
+
+# /prisma/                 @shockmegenie/backend
+# /src/modules/payments/   @shockmegenie/backend
+# /.github/workflows/      @shockmegenie/engineering

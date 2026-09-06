@@ -1,0 +1,53 @@
+name: Deploy
+
+# Pulls the image built by Release and restarts the service. No source, no build toolchain,
+# and no build step on the server.
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+    branches: [dev, prod]
+
+concurrency:
+  group: deploy-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Pull and restart
+    # Never deploy the output of a failed release.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.workflow_run.head_branch }}
+    steps:
+      - name: Validate configuration
+        env:
+          DEPLOY_BASE_PATH: ${{ vars.DEPLOY_BASE_PATH }}
+        run: |
+          if [ -z "$DEPLOY_BASE_PATH" ]; then
+            echo "::error::Repository variable DEPLOY_BASE_PATH is not set for this environment. It must be the absolute path to the shockmegenie directory on the target server."
+            exit 1
+          fi
+
+      - name: Pull image and restart service
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: BRANCH
+          script: |
+            set -e
+            cd "${{ vars.DEPLOY_BASE_PATH }}/shockmegenie-docs"
+
+            COMPOSE_FILE="docker-compose.${BRANCH}.yml"
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "$COMPOSE_FILE not found. Deploy shockmegenie-docs to this environment first."
+              exit 1
+            fi
+
+            docker compose -f "$COMPOSE_FILE" pull admin
+            docker compose -f "$COMPOSE_FILE" up -d --no-build --remove-orphans admin
+            docker compose -f "$COMPOSE_FILE" ps

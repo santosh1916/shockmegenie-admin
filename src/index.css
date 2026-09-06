@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Design tokens. Never hardcode a colour in a component; add a token here instead.
+   See shockmegenie-docs/UI_Standards.md. */
+@theme {
+  --color-surface: oklch(99% 0 0);
+  --color-surface-muted: oklch(96.5% 0.003 250);
+  --color-border: oklch(90% 0.005 250);
+  --color-content: oklch(22% 0.01 250);
+  --color-content-muted: oklch(52% 0.012 250);
+  --color-brand: oklch(58% 0.19 305);
+  --color-brand-contrast: oklch(99% 0 0);
+  --color-danger: oklch(56% 0.20 27);
+  --color-success: oklch(62% 0.15 150);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-content);
+    -webkit-font-smoothing: antialiased;
+  }
+}

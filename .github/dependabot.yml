@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # This platform handles card payment flows through Razorpay and stores personal data
+  # under DPDP obligations, so an unpatched transitive dependency is a compliance problem
+  # rather than a chore.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One pull request for routine patches; majors still arrive individually.
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
