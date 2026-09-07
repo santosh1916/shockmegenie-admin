@@ -16,7 +16,7 @@ jobs:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v4
         with:
@@ -48,7 +48,7 @@ jobs:
       # absent the job says so loudly rather than passing quietly.
       - name: Check out the API specification
         id: spec
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.repository_owner }}/shockmegenie-api
           ref: ${{ github.base_ref || github.ref_name }}
