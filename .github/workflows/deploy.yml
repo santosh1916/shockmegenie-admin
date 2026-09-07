@@ -30,7 +30,7 @@ jobs:
           fi
 
       - name: Pull image and restart service
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
         with:
