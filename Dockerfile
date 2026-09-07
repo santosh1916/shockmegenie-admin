@@ -1,13 +1,13 @@
 # ShockMeGenie admin. Builds to static files and ships behind nginx: the SPA has no server
 # of its own, which is the point. See docs/adr/0003-admin-as-vite-spa.md.
 
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@11 --activate
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@11 --activate
 COPY --from=deps /app/node_modules ./node_modules
